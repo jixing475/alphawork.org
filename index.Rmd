@@ -1,0 +1,53 @@
+---
+title: AlphaWork
+site: distill::distill_website
+---
+<style>
+d-appendix {
+ display: none!important;
+}
+.twitter-border {
+ border: 1px dashed black;
+ width: 300px;
+ position : relative;
+ border-radius: 5px;
+ margin-left: 40px;
+}
+.twitter-border::before {
+ content: "\f099";
+ font-family: "Font Awesome 5 Brands";
+ font-weight: 900; 
+ font-size: 1.5rem;
+ position: absolute;
+ top: -15px;
+ left: -15px;
+}
+
+.twitter-border > p {
+  margin-block-start: 0em;
+  margin-block-end: 0em;
+  margin-bottom: 0em;
+}
+</style>
+
+## Recent news
+
+> The goal of this project was to use artificial intelligence (AI) to discover drug candidates for ADRB2 which can overcome acquired resistance and reduce the limitations of the current drug discovery process, such as high costs and long durations of drug design and production.
+
+Output after completion of the project:
+
+  1. ADRB2 agonist/antagonist candidate compounds
+  2. AI-Enabled Pipeline for de-nove Drug Discovery(Still is the first edition at present, still needs the later revision and adjustment)
+
+[`nestr` R-package](https://github.com/emitanaka/nestr) is now on CRAN
+
+<br>
+
+<!-- <div class="twitter-border"> -->
+<!-- <a class="twitter-timeline" data-height="400" data-width="300"  href="https://twitter.com/statsgen?ref_src=twsrc%5Etfw">Tweets by statsgen</a> -->
+<!-- </div> -->
+<!-- <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script> -->
+
+<!-- ## Website construction 👷🏻‍♀ -->
+
+<!-- I decided to redo my website using the [distill](https://rstudio.github.io/distill/) R-package and so some parts of my website is in construction. If you are interested in the source code of this website, you can find it [here](https://github.com/emitanaka/emitanaka.github.io). -->

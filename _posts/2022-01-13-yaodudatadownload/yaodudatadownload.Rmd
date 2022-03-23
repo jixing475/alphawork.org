@@ -1,0 +1,223 @@
+---
+title: "药渡数据下载"
+description: |
+   这个文档是记录下载药渡数据的小任务.
+author:
+  - name: Jixing Liu
+    url: https://emitanaka.org
+    affiliation: Monash University
+    affiliation_url: https://numbat.space/
+date: 2022-01-14
+draft: false
+#bibliography: ref.bib
+base_url: http://emitanaka.org/
+twitter:
+  creator: "@statsgen"
+categories: [experimental design, R]
+output:
+  distill::distill_article:
+    self_contained: false
+    highlight: default
+    toc: true
+    #highlight_downlit: false # downlit makes attr.source not work
+    toc_float: true
+---
+
+```{r knit-setup, include=FALSE}
+knitr::knit_hooks$set(toggle = function(before, options) {
+  if(options$toggle) {
+    ifelse(before, "<div class='toggle-code'>", "</div>")
+  }
+})
+
+
+knitr::opts_chunk$set(echo = TRUE, 
+                      toggle = TRUE,
+                      cache = TRUE,
+                      eval = FALSE,
+                      cache.path = "cache/",
+                      fig.align = "center",
+                      fig.path = "figures/")
+
+```
+
+```{css, echo = FALSE}
+.toggle-code {
+  display: none;
+}
+
+button {
+  border-radius: 10px;
+  color: var(--aside-color, rgba(0, 0, 0, 0.6));
+  border-color: var(--aside-color, rgba(0, 0, 0, 0.6));
+}
+
+.scroll-output {
+  height: 200px;
+  overflow-y: scroll!important;
+}
+```
+
+
+<aside>
+<p><button onclick="showscript()">Click Me</button> to see all code in this article. You can also find the link to the source Rmd file at the footer.</p>
+  
+</aside>
+
+```{r setup, cache = FALSE}
+library(tidyverse)
+library(rvest)
+library(lubridate)
+library(cranlogs)
+library(glue)
+library(scales)
+library(colorspace)
+library(tidytext)
+library(pluralize)
+library(kableExtra)
+library(igraph)
+library(ggraph)
+
+myggtheme <- 
+  theme(panel.background = element_rect(fill = NA),
+        panel.grid = element_line(color = "#f6e5ee"),
+        axis.text = element_text(color = "#6A3FAD"),
+        axis.line = element_line(color = "#6A3FAD", size = 0.7),
+        axis.ticks.length = unit(1.4, "mm"),
+        axis.ticks = element_line(color = "#6A3FAD", size = 0.7),
+        axis.title = element_text(color = "#6A3FAD", face = "bold"),
+        strip.background = element_rect(color = "#6A3FAD",
+                                        fill = "#6A3FAD"),
+        strip.text = element_text(color = "white"),
+        plot.title.position = "plot",
+        plot.title = element_text(color = "#6A3FAD", face = "bold")) 
+```
+
+## 药渡_二氢叶酸合成酶
+
+1. 药渡搜索
+2. 导出 excel
+3. 清理 Excel, 确保每一行是一个单体药物的名称
+4. Km: name to drugID
+5. url to smiles in R
+
+```{r}
+
+library(readxl)
+data_path <- here::here(usethis::proj_path(), "analysis/data/raw_data")
+
+data <- readxl::read_excel(here::here(data_path, "药渡_二氢叶酸合成酶.xlsx"))
+
+
+# 拆分 药物名称
+
+data %>% 
+  # 提取英文名字
+  mutate(drug_name = `药物名称` %>% str_remove(pattern = "\\(.+\\)") ) %>% 
+  # select(药物名称, drug_name) %>% 
+  # head() %>% 
+  
+  # 切分 by /
+  separate_rows(drug_name, sep = "/") %>% 
+  rio::export(here::here(data_path, "药渡_二氢叶酸合成酶_drugname.xlsx"))
+  
+#  use KM
+
+
+data_url <- readxl::read_excel(here::here(data_path, "药渡_二氢叶酸合成酶_drugname_urls.xlsx"))
+
+url <- 
+data_url$drugbank_url[1]
+
+url_to_smiles <- function(url){
+  smi <- 
+  url %>% str_extract(pattern = "DB[0-9]+") %>% 
+  str_c("https://go.drugbank.com/structures/small_molecule_drugs/", .,".smiles") %>% 
+  read_lines()
+  
+  return(smi)
+}
+
+
+data_url_smi <- 
+data_url %>% 
+  filter(drugbank_url %>% str_detect(pattern = "drugs/DB")) %>% 
+  
+  #select(drugbank_url) %>% head(3) %>% 
+  mutate(smiles = url_to_smiles(drugbank_url))
+  
+  
+data_url_smi %>% 
+  # 移除一些金属离子
+  filter(smiles %>% str_detect(pattern = "C")) %>% 
+  
+  select(药物名称, drug_name, smiles, everything()) %>% 
+  write_csv(here::here(data_path, "药渡_二氢叶酸合成酶_drugname_urls_smiles.csv"))
+
+```
+
+
+## Dihydrofolate Reductase
+
+
+```{r}
+
+library(readxl)
+data_path <- here::here(usethis::proj_path(), "analysis/data/raw_data")
+
+data <- readxl::read_excel(here::here(data_path, "yaodu_Dihydrofolate_Reductase.xlsx"))
+
+
+# 拆分 药物名称
+
+data %>% 
+  # 提取英文名字
+  mutate(drug_name = `药物名称` %>% str_remove(pattern = "\\(.+\\)") ) %>% 
+  # select(药物名称, drug_name) %>% 
+  # head() %>% 
+  
+  # 切分 by /
+  separate_rows(drug_name, sep = "/") %>% view()
+  rio::export(here::here(data_path, "yaodu_Dihydrofolate_Reductase_drugname.xlsx"))
+  
+#  use KM
+
+data_url <- readxl::read_excel(here::here(data_path, "yaodu_Dihydrofolate_Reductase_drugname_urls.xlsx"))
+
+
+
+url_to_smiles <- function(url){
+  smi <- 
+  url %>% str_extract(pattern = "DB[0-9]+") %>% 
+  str_c("https://go.drugbank.com/structures/small_molecule_drugs/", .,".smiles") %>% 
+  read_lines()
+  
+  return(smi)
+}
+
+
+data_url_smi <- 
+data_url %>% 
+  filter(drugbank_url %>% str_detect(pattern = "drugs/DB")) %>% 
+  
+  #select(drugbank_url) %>% head(3) %>% 
+  mutate(smiles = url_to_smiles(drugbank_url))
+  
+  
+data_url_smi %>% 
+  # 移除一些金属离子
+  filter(smiles %>% str_detect(pattern = "C")) %>% 
+  
+  select(药物名称, drug_name, smiles, everything()) %>% 
+  write_csv(here::here(data_path, "yaodu_Dihydrofolate_Reductase_drugname_urls_smiles.csv"))
+
+```
+
+
+
+
+
+
+
+
+
